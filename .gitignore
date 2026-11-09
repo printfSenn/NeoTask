@@ -1,0 +1,17 @@
+# Dependencies
+neotask/node_modules/
+
+# Build output
+neotask/dist/
+neotask/dist-single/
+
+# Local tooling and logs
+.vscode/
+.idea/
+*.log
+coverage/
+
+# Local environment files
+.env
+.env.*
+!.env.example
