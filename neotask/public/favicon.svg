@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">NeoTask</title>
+  <desc id="desc">Neon green task dashboard mark</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#071811"/>
+      <stop offset="1" stop-color="#102f20"/>
+    </linearGradient>
+    <linearGradient id="neon" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#b8ffd2"/>
+      <stop offset=".45" stop-color="#00ff66"/>
+      <stop offset="1" stop-color="#2ca064"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="15" fill="url(#bg)" stroke="#2ca064" stroke-width="2"/>
+  <path d="M17 45V19h7l16 17V19h7v26h-7L24 28v17z" fill="none" stroke="url(#neon)" stroke-width="5" stroke-linejoin="round"/>
+  <circle cx="50" cy="14" r="3" fill="#ffd84a"/>
+</svg>
