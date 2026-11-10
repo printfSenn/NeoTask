@@ -7,9 +7,15 @@ export const Store={key:'jev.projects.v3',projects:[],scene:'city',layer:'true',
  today(){const d=new Date();return new Date(d.getFullYear(),d.getMonth(),d.getDate())},
  days(s){if(!this.validDate(s))return null;const[y,m,d]=s.split('-').map(Number);return Math.round((new Date(y,m-1,d)-this.today())/86400000)},
  norm(input){const a=Array.isArray(input)?input:input&&input.projects;if(!Array.isArray(a))return null;
-  return a.map((p,i)=>{const id=String(p&&p.id||'p'+Date.now().toString(36)+i);
+  if(a.length>CONFIG.limits.maxProjects)return null;
+  let totalTasks=0;
+  for(let i=0;i<a.length;i++){const p=a[i],tasks=Array.isArray(p&&p.tasks)?p.tasks:[],name=String(p&&p.name||'Proyek '+(i+1)),group=String(p&&p.group||'Umum');totalTasks+=tasks.length;
+   if(tasks.length>CONFIG.limits.maxTasksPerProject||totalTasks>CONFIG.limits.maxTotalTasks||name.length>CONFIG.limits.maxNameLength||group.length>CONFIG.limits.maxGroupLength)return null;
+   for(const t of tasks){const title=typeof t==='string'?t:String(t&&t.title||t&&t.name||'task');if(title.length>CONFIG.limits.maxTaskTitleLength)return null}}
+  return a.map((p,i)=>{const id=String(p&&p.id||'p'+Date.now().toString(36)+i),slots={};
+   for(const mode of CONFIG.scenes){const v=p&&p.slots&&p.slots[mode];if(v!==undefined)slots[mode]=deep(v)}
    return{id,name:String(p&&p.name||'Proyek '+(i+1)),group:String(p&&p.group||'Umum'),deadline:this.validDate(p&&p.deadline)?p.deadline:'',
-    seed:Number.isFinite(+(p&&p.seed))?(+p.seed>>>0):U.hash(id),slots:deep(p&&p.slots||{}),
+    seed:Number.isFinite(+(p&&p.seed))?(+p.seed>>>0):U.hash(id),slots,
     tasks:(Array.isArray(p&&p.tasks)?p.tasks:[]).map(t=>typeof t==='string'?{title:t,due:'',done:false}:{title:String(t&&t.title||t&&t.name||'task'),due:this.validDate(t&&t.due)?t.due:'',done:!!(t&&t.done)})}})},
  capture(){return deep(this.projects)},
  save(){try{localStorage.setItem(this.key,JSON.stringify({projects:this.projects,scene:State.scene,layer:State.layer,threshold:State.threshold}))}catch(e){}},

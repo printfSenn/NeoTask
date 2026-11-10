@@ -1,5 +1,6 @@
 export const CONFIG={
  points:50000,windowPitch:.02,rowPitch:.016,urgencyWindowDays:14,alertThreshold:.70,gridBase:3,
+ limits:{importBytes:2*1024*1024,maxProjects:500,maxTasksPerProject:1000,maxTotalTasks:10000,maxNameLength:200,maxGroupLength:100,maxTaskTitleLength:300},
  scenes:['city','satellite','ship','factory','airport','metro'],
  layers:[['true','TRUE'],['progress','PROGRESS'],['urgency','URGENCY'],['load','OPEN LOAD'],['risk','RISK']],
  palette:[[44,100,76],[70,135,108],[170,245,205],[205,255,228],[0,255,102],[40,205,95],[34,165,180],[255,60,80]],
