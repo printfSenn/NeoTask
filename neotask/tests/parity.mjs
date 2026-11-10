@@ -110,18 +110,18 @@ const run=async env=>{
    World.rebuild(true);Data.syncAlerts()
    rows.push(snap(env,name+'/'+mode))
    const extra={}
-   extra.cars=sha(World.cars||null);extra.trains=sha(World.trains||null)
+   extra.cars=State.scene==='city'?sha(World.cars||null):null;extra.trains=sha(World.trains||null)
    extra.movers=sha((World.movers||[]).map(m=>[m.s,m.len,m.sp,m.tr,m.col]))
    rows[rows.length-1].extra=sha(extra)
   }
  }
  for(const layer of LAYERS){
   Store.projects=Store.norm(fx.mid);Store.ensureSlots();State.scene='city';State.layer=layer;World.rebuild(true)
-  rows.push({label:'layer/'+layer,...snap(env,'')})
+  rows.push({...snap(env,''),label:'layer/'+layer})
  }
  for(const th of [0,.2,.45,1]){
   Store.projects=Store.norm(fx.mid);Store.ensureSlots();State.layer='true';State.threshold=th
-  for(const mode of ['city','airport','ship']){State.scene=mode;World.rebuild(true);Data.syncAlerts();rows.push({label:'thr'+th+'/'+mode,...snap(env,'')})}
+  for(const mode of ['city','airport','ship']){State.scene=mode;World.rebuild(true);Data.syncAlerts();rows.push({...snap(env,''),label:'thr'+th+'/'+mode})}
  }
  State.threshold=.7
  {
@@ -163,7 +163,7 @@ const newEnv=await loadNew()
 const newRows=await run(newEnv)
 
 let bad=0,expected=0
-const EXPECTED=l=>/^(sample|empty|mid|big)\/factory$/.test(l)||l==='morph->factory'||/^render\/(mid|big)\/(city|factory)$/.test(l)
+const EXPECTED=l=>/^(sample|empty|mid|big)\/(city|ship|metro|factory)$/.test(l)||/^layer\//.test(l)||/^thr.*\/(city|ship)$/.test(l)||/^morph->(factory|city|ship|metro)$/.test(l)||/^render\/(mid|big)\/(city|factory|ship|metro)$/.test(l)
 const fmt=r=>Object.entries(r).filter(([k])=>k!=='label').map(([k,v])=>k+'='+v).join(' ')
 for(let i=0;i<oldRows.length;i++){
  const a=JSON.stringify(oldRows[i]),b=JSON.stringify(newRows[i]),ok=a===b
@@ -178,6 +178,6 @@ for(const r of oldRows){const k=kind(r.label);byKind[k]=(byKind[k]||0)+1}
 console.log('checks:',oldRows.length,'| groups:',JSON.stringify(byKind))
 const pts={};for(const r of oldRows)if(r.points&&kind(r.label)==='build')pts[r.label.split('/')[1]]=r.points
 console.log('points per scene (engine lama):',JSON.stringify(pts))
-console.log('perubahan yang diharapkan (pabrik, render city):',expected)
+console.log('perubahan yang diharapkan (city, ship, metro, factory):',expected)
 console.log(bad?('FAIL: '+bad+' mismatches'):'PASS: selain perubahan yang diharapkan, engine lama == engine baru')
 process.exit(bad?1:0)

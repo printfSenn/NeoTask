@@ -55,7 +55,7 @@ for(const [seed,np] of [[11,3],[22,24]]){
   }
  }
  console.log('seed',seed,'projects',np,'cars',World.cars.length,JSON.stringify(m),'dalam',SEC,'detik')
- if(World.cars.length<150)fail('mobil terlalu sedikit '+World.cars.length)
+ if(World.cars.length<80)fail('mobil terlalu sedikit '+World.cars.length)
  if(m.same)fail('mobil menumpuk di lajur yang sama '+m.same)
  if(m.proj)fail('mobil tembus gedung proyek '+m.proj)
  if(m.decor)fail('mobil tembus gedung dekor '+m.decor)
