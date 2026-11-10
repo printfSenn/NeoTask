@@ -378,10 +378,9 @@ export const World={
  build(mode){
   const prims=[],B=this.buildings;
   B.forEach(b=>this.projectPrims(mode,b,prims));
-  const taskPrims=mode==='ship'?prims.filter(q=>q.ti>=0):prims;
-  const N=CONFIG.points,projN=taskPrims.length?Math.min(Math.floor(N*.5),B.length*4500):0;
+  const N=CONFIG.points,projN=prims.length?Math.min(Math.floor(N*.5),B.length*4500):0;
   const rnd=U.rand(U.hash(mode+'|'+B.map(b=>b.id+':'+b.p.seed+':'+b.n).join(',')));
-  const pick=taskPrims.length?this.cumPick(taskPrims,rnd):null,dec=this.decor(mode,rnd);
+  const pick=prims.length?this.cumPick(prims,rnd):null,dec=this.decor(mode,rnd);
   const pos=new Float32Array(N*3),attr=new Uint8Array(N),pid=new Int16Array(N),tid=new Int16Array(N),bri=new Float32Array(N);
   for(let i=0,k=0;i<N;i++){
    let pt,id=-1,ti=-1;

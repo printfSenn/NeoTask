@@ -163,7 +163,7 @@ const newEnv=await loadNew()
 const newRows=await run(newEnv)
 
 let bad=0,expected=0
-const EXPECTED=l=>/^(sample|empty|mid|big)\/(city|ship|metro|factory)$/.test(l)||/^layer\//.test(l)||/^thr.*\/(city|ship)$/.test(l)||/^morph->(factory|city|ship|metro)$/.test(l)||/^render\/(mid|big)\/(city|factory|ship|metro)$/.test(l)
+const EXPECTED=l=>/^(sample|empty|mid|big)\/(city|metro|factory)$/.test(l)||/^layer\//.test(l)||/^thr.*\/city$/.test(l)||/^morph->(factory|city|ship|metro)$/.test(l)||/^render\/(mid|big)\/(city|factory|metro)$/.test(l)
 const fmt=r=>Object.entries(r).filter(([k])=>k!=='label').map(([k,v])=>k+'='+v).join(' ')
 for(let i=0;i<oldRows.length;i++){
  const a=JSON.stringify(oldRows[i]),b=JSON.stringify(newRows[i]),ok=a===b
@@ -178,6 +178,6 @@ for(const r of oldRows){const k=kind(r.label);byKind[k]=(byKind[k]||0)+1}
 console.log('checks:',oldRows.length,'| groups:',JSON.stringify(byKind))
 const pts={};for(const r of oldRows)if(r.points&&kind(r.label)==='build')pts[r.label.split('/')[1]]=r.points
 console.log('points per scene (engine lama):',JSON.stringify(pts))
-console.log('perubahan yang diharapkan (city, ship, metro, factory):',expected)
+console.log('perubahan yang diharapkan (city, metro, factory):',expected)
 console.log(bad?('FAIL: '+bad+' mismatches'):'PASS: selain perubahan yang diharapkan, engine lama == engine baru')
 process.exit(bad?1:0)
