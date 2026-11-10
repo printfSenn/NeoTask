@@ -66,7 +66,7 @@ export const World={
  projectPrims(mode,b,a){
   const x=b.cx,z=b.cz,y0=b.y0,n=b.n,o=b.order,id=b.pid,W0=b.w,D0=b.d;
   b.bw=W0*1.5;b.bd=D0*1.5;
-  if(!n){this.box(a,x,z,y0,y0+.05,W0*1.2,D0*1.2,id,-1);this.cyl(a,x,z,y0+.05,y0+.18,.014,id,-2,true);b.top=y0+.18;return}
+  if(!n){if(mode==='ship'){b.bw=0;b.bd=0;b.top=y0;return}this.box(a,x,z,y0,y0+.05,W0*1.2,D0*1.2,id,-1);this.cyl(a,x,z,y0+.05,y0+.18,.014,id,-2,true);b.top=y0+.18;return}
   const bh=b.h/n;let top=y0+b.h,tw=1;
   if(mode==='city'){
    const t=b.type,ar={slab:[1.12,.74],tower:[.8,.8],setback:[1,1],podium:[.8,.8],crown:[1,1],spire:[.9,.9]}[t],W=W0*ar[0],D=D0*ar[1];
@@ -224,14 +224,7 @@ export const World={
    this.moverKey='ship';const m=[];
    for(let k=0;k<5;k++){const A=L+.3+k*.17,Bz=.65+k*.13;m.push({s:Math.random(),len:2*Math.PI*(A+Bz)/2,sp:(k%2?1:-1)*(.16+Math.random()*.1),tr:7,col:[0,220,255],f:s=>{const a=s*6.2832;return[Math.cos(a)*A,.008,Math.sin(a)*Bz]}})}
    this.movers=m}
-  const crates=[],cr=U.rand(555);
-  for(let x=-.62;x<=1.0;x+=.2)for(let zi=-3;zi<=3;zi++){
-   const z=zi*.085,mz=Math.min(.27,hw(x/L)-.07);if(Math.abs(z)>mz)continue;
-   if(this.buildings.some(b=>Math.abs(b.cx-x)<b.w+.1&&Math.abs(b.cz-z)<b.d+.04))continue;
-   const hts=1+Math.floor(cr()*4);
-   for(let k=0;k<hts;k++)crates.push({k:0,x,z,y0:DY+.008+k*.075,y1:DY+.008+k*.075+.068,w:.085,d:.036,ra:3,rib:true,fa:[1,1,5,6][Math.floor(cr()*4)]});
-  }
-  const cpick=crates.length?this.cumPick(crates,rnd):null,crate=()=>cpick?this.primPt(cpick(),rnd):deck();
+  const crate=()=>deck();
   return this.mix([[.26,hull],[.08,deck],[.2,crate],[.2,water],[.06,rings],[.1,sp],[.03,mast],[.05,rail],[.01,buoy]],rnd);
  },
  orbit(k,a){const R=1.45+k*.13;return[Math.cos(a)*R,.75+k*.1+Math.sin(a+k*1.7)*.2,Math.sin(a)*R*.8]},
