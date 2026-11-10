@@ -10,14 +10,15 @@
     "preview": "vite preview",
     "test:parity": "node tests/parity.mjs",
     "test:dom": "vite build --config tests/vite.dom.config.js && node tests/dom-parity.mjs",
+    "test:security": "node tests/security.mjs",
     "lint": "eslint src",
     "test:factory": "node tests/factory.mjs",
     "test:cars": "node tests/cars.mjs",
-    "test": "npm run test:parity && npm run test:factory && npm run test:cars && npm run test:dom"
+    "test": "npm run test:parity && npm run test:factory && npm run test:cars && npm run test:security && npm run test:dom"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^6.2.1",
-    "eslint": "^10.14.0",
+    "eslint": "^9.39.5",
     "globals": "^17.14.0",
     "jsdom": "^31.0.0",
     "vite": "^8.3.6",
