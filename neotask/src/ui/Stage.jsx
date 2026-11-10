@@ -4,7 +4,7 @@ import{I18}from'../engine/i18n.js'
 import{startEngine}from'../engine/runtime.js'
 import{t,useBridge,vizOut,Picker}from'./bridge.js'
 
-const HINT='drag putar \u00b7 scroll zoom \u00b7 klik pilih \u00b7 \u2190\u2192 proyek \u00b7 / cari \u00b7 1-5 layer \u00b7 space orbit \u00b7 t traffic \u00b7 c cinema \u00b7 n baru \u00b7 r reset'
+const HINT='drag putar \u00b7 scroll zoom \u00b7 klik pilih \u00b7 \u2190\u2192 proyek \u00b7 / cari \u00b7 1-5 layer \u00b7 space orbit \u00b7 t traffic \u00b7 c cinema \u00b7 n baru \u00b7 shift+x hapus \u00b7 r reset'
 
 function Clock(){
  useBridge('lang')

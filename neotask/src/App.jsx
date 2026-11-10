@@ -7,17 +7,21 @@ import{t,useTick,Search,toggleAuto,toggleTraffic,toggleCine}from'./ui/bridge.js'
 import Header from'./ui/Header.jsx'
 import Stage from'./ui/Stage.jsx'
 import Sidebar from'./ui/Sidebar.jsx'
+import TerminalDialog from'./ui/TerminalDialog.jsx'
 
 function useHotkeys(){
  useEffect(()=>{
   const h=e=>{
    if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return
+   if(document.querySelector('.termveil'))return
    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?API.redo():API.undo();return}
    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='y'){e.preventDefault();API.redo();return}
    if(e.key==='/'&&!e.ctrlKey){e.preventDefault();Search.focus();return}
    if(e.key===' '){e.preventDefault();toggleAuto()}
    else if(e.key==='t')toggleTraffic();else if(e.key==='c')toggleCine()
-   else if(e.key==='n')API.newProject();else if(e.key==='r')API.resetView();else if(e.key==='Escape'||e.key==='Backspace')API.select('')
+   else if(e.key.toLowerCase()==='n'){e.preventDefault();API.newProject()}
+   else if(e.shiftKey&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&e.key.toLowerCase()==='x'){e.preventDefault();const p=API.store.projects.find(x=>x.id===API.state.selected);if(p)API.deleteProject(p)}
+   else if(e.key==='r')API.resetView();else if(e.key==='Escape'||e.key==='Backspace')API.select('')
    else if(e.key==='ArrowRight')API.selectNext(1);else if(e.key==='ArrowLeft')API.selectNext(-1)
    else if(/^[1-5]$/.test(e.key))API.setLayer(CONFIG.layers[+e.key-1][0])
   }
@@ -63,6 +67,7 @@ export default function App(){
  useHotkeys()
  return(<>
   <div id="app"><Header/><main><Stage/><Sidebar/></main></div>
+  <TerminalDialog/>
   <Boot/>
  </>)
 }
