@@ -52,7 +52,8 @@ export const World={
    }else if(mode==='satellite'){
     b.cx=(fx*2-1)*.95;b.cz=(fz*2-1)*.95;b.y0=this.H0(b.cx,b.cz);const c=1.9/g;w=Math.min(.09*ratio,c*.4);d=Math.min(.09*(2-ratio),c*.4);
    }else if(mode==='metro'){
-    b.cx=(fx*2-1)*.8;b.cz=(fz*2-1)*.75;b.y0=0;b.h=.08;w=Math.min(.26,1.6/g*.42);d=.06;
+    const style=(p.seed>>>4)%3,jx=((p.seed>>>8)%1000/999-.5)*.035,jz=((p.seed>>>19)%1000/999-.5)*.022;
+    b.metroStyle=style;b.cx=(fx*2-1)*.8+jx;b.cz=(fz*2-1)*.75+jz;b.y0=0;b.h=.08+[0,.012,.022][style];w=Math.min(.26,1.6/g*.42)*(style===1?1.12:style===2?.9:1);d=.06*(style===2?1.18:1);
    }else if(mode==='airport'){
     b.cx=(fx*2-1)*.72;b.cz=.05+fz*.8;b.y0=0;b.h=.08;w=.1;d=.06;
    }else{
@@ -96,13 +97,27 @@ export const World={
    if(b.alert){this.cyl(a,x+W*.3,z,top-.1,top+.06,.015,id,-3,true);top+=.06}
    b.bw=W*1.7;b.bd=W*1.7;
   }else if(mode==='metro'){
-   const sl=Math.min(.08,2*W0/n),hw=W0+.02;
-   this.box(a,x,z+.026,y0,y0+.012,hw,.018,id,-1,1);b.bw=hw+.06;b.bd=.11;b.top=y0+.13;
+   const sl=Math.min(.08,2*W0/Math.max(1,n)),hw=W0+.02,style=(b.p.seed>>>4)%3;
+   this.box(a,x,z+.026,y0,y0+.012,hw,.018,id,-1,1);b.bw=hw+.06;b.bd=.13;b.top=y0+.13;
    this.box(a,x,z+.04,y0+.05,y0+.056,hw+.01,.03,id,-1);
    [-.9,0,.9].forEach(f=>this.cyl(a,x+f*hw,z+.052,y0+.012,y0+.05,.004,id,-1));
+   if(style===0){
+    this.box(a,x,z+.066,y0+.125,y0+.139,hw+.045,.042,id,-1);
+    [-.88,.88].forEach(f=>this.box(a,x+f*hw,z+.066,y0+.056,y0+.125,.008,.008,id,-1));
+   }else if(style===1){
+    this.box(a,x,z+.066,y0+.116,y0+.129,hw*.72,.052,id,-1);
+    this.box(a,x,z+.066,y0+.129,y0+.14,hw*.52,.035,id,-1);
+    [-.72,0,.72].forEach(f=>this.cyl(a,x+f*hw,z+.066,y0+.056,y0+.116,.007,id,-1));
+   }else{
+    this.box(a,x,z+.066,y0+.115,y0+.13,hw+.04,.024,id,-1);
+    this.box(a,x-hw*.72,z+.068,y0+.13,y0+.21,.018,.018,id,-1);
+    this.box(a,x-hw*.72,z+.068,y0+.21,y0+.23,.045,.01,id,-1);
+    this.cyl(a,x+hw*.72,z+.066,y0+.056,y0+.15,.009,id,-1);
+   }
    this.box(a,x-hw-.05,z+.04,y0,y0+.05,.04,.04,id,-1);this.box(a,x-hw-.05,z+.04,y0+.05,y0+.056,.045,.045,id,-1);
    this.cyl(a,x,z+.1,y0,y0+.11,.005,id,-1);this.box(a,x,z+.1,y0+.11,y0+.13,.04,.006,id,-1);
-   if(!b.complete)o.forEach((tk,k)=>{const xs=x-n*sl/2+(k+.5)*sl;this.box(a,xs,z+.07,y0+.01,y0+.042,sl/2-.004,.016,id,tk._i);this.box(a,xs,z+.07,y0+.042,y0+.048,sl/2-.008,.011,id,tk._i)});
+   if(!b.complete)o.forEach((tk,k)=>{const xs=x-hw+(k+.5)*sl;this.box(a,xs,z+.07,y0+.01,y0+.042,sl/2-.004,.016,id,tk._i);this.box(a,xs,z+.07,y0+.042,y0+.048,sl/2-.008,.011,id,tk._i)});
+   if(style===2){this.box(a,x+hw*.35,z+.075,y0+.057,y0+.085,.025,.008,id,-1);this.box(a,x+hw*.35,z+.075,y0+.085,y0+.101,.009,.003,id,-1)}
    if(b.alert){this.cyl(a,x,z+.1,y0+.13,y0+.2,.008,id,-3,true);b.top=y0+.2}
    return;
   }else if(mode==='airport'){
@@ -153,19 +168,24 @@ export const World={
  },
  decorCity(rnd){
   const S=this.S,occ=new Set(this.buildings.map(b=>b.ix+'|'+b.iz)),boxes=[],parks=[],tall=[],ext=1.3;
+  const addLot=(lx,lz,w,d,boost,rb)=>{
+   if(this.river(lx,lz))return;
+   const core=Math.max(0,.62-Math.hypot(lx,lz)*.42),h=Math.min(.62,.04+boost+Math.pow(rb(),2.15)*.2+core*rb()*.62+(rb()<.045?.28:0)),tiers=h>.44?4:h>.32?3:h>.16?2:1;let y0=0;
+   for(let t=0;t<tiers;t++){const f=[.5,.28,.14,.08][t],y1=y0+h*f,s=1-t*.18;boxes.push({k:0,x:lx,z:lz,y0,y1,w:w*s,d:d*s,ra:3});y0=y1;
+    if(t===tiers-1){boxes.push({k:0,x:lx+w*s*.3,z:lz-d*s*.2,y0:y1,y1:y1+.012,w:w*s*.28,d:d*s*.28,ra:3});boxes.push({k:0,x:lx-w*s*.35,z:lz+d*s*.3,y0:y1,y1:y1+.008,w:w*s*.2,d:d*s*.2,ra:3});
+     if(h>.2)boxes.push({k:1,x:lx,z:lz,y0:y1,y1:y1+.03+rb()*.04,w:.003,d:.003,ra:3})}}
+   tall.push({x:lx,z:lz,h})
+  };
   for(let i=0;i<9;i++)for(let j=0;j<9;j++){
    const ix=i-4,iz=j-4,cx=ix*S,cz=iz*S;if(occ.has(ix+'|'+iz))continue;
    const rb=U.rand(U.hash('blk'+i+'_'+j));
-   const core=Math.max(0,.62-Math.hypot(cx,cz)*.42);
-   for(let a=0;a<3;a++)for(let b=0;b<3;b++){
-    if(rb()<.03)continue;
-    const lx=cx+(a-1)*S*.3,lz=cz+(b-1)*S*.3,w=S*.11*(.6+rb()*.4),d=S*.11*(.6+rb()*.4);if(this.river(lx,lz))continue;
-    const h=Math.min(.55,.04+Math.pow(rb(),2.3)*.16+core*rb()*.6+(rb()<.04?.3:0)),tiers=h>.42?4:h>.32?3:h>.16?2:1;let y0=0;
-    for(let t=0;t<tiers;t++){const f=[.5,.28,.14,.08][t],y1=y0+h*f,s=1-t*.18;boxes.push({k:0,x:lx,z:lz,y0,y1,w:w*s,d:d*s,ra:3});y0=y1;
-     if(t===tiers-1){boxes.push({k:0,x:lx+w*s*.3,z:lz-d*s*.2,y0:y1,y1:y1+.012,w:w*s*.28,d:d*s*.28,ra:3});boxes.push({k:0,x:lx-w*s*.35,z:lz+d*s*.3,y0:y1,y1:y1+.008,w:w*s*.2,d:d*s*.2,ra:3});
-      if(h>.2)boxes.push({k:1,x:lx,z:lz,y0:y1,y1:y1+.03+rb()*.04,w:.003,d:.003,ra:3})}}
-    tall.push({x:lx,z:lz,h});
-   }
+   if(Math.floor(rb()*5)===0&&rb()<.62){parks.push([cx,cz]);continue}
+   const lot=(ox,oz,sx,sz,boost=0)=>addLot(cx+ox*S,cz+oz*S,S*.11*sx*(.8+rb()*.35),S*.11*sz*(.8+rb()*.35),boost,rb);
+   const pattern=Math.floor(rb()*4);
+   if(pattern===0){lot(0,0,1.5,1.35,.08);lot(-.31,.27,.55,.55);lot(.3,-.25,.6,.6)}
+   else if(pattern===1){for(const ox of [-.29,.29])for(const oz of [-.28,.28])lot(ox,oz,.72,.72,rb()<.35?.06:0)}
+   else if(pattern===2){for(const ox of [-.34,0,.34]){lot(ox,-.3,.62,.55,ox===0?.07:0);if(rb()>.12)lot(ox,.3,.62,.55)}}
+   else{for(const ox of [-.32,0,.32])for(const oz of [-.3,.3])if(rb()>.1)lot(ox,oz,.58,.56,0);lot(0,0,.72,.72,.14)}
   }
   tall.sort((p,q)=>q.h-p.h);const tp=tall.slice(0,10),pick=boxes.length?this.cumPick(boxes,rnd):null;
   const gp=()=>[(rnd()*2-1)*ext,rnd()<.9?rnd()*.004:rnd()*.02,(rnd()*2-1)*ext,0];
@@ -183,9 +203,10 @@ export const World={
   const beacon=()=>{if(!tp.length)return gp();const t=tp[Math.floor(Math.pow(rnd(),2)*tp.length)];return rnd()<.12?[t.x,t.h*1.22,t.z,7]:[t.x,t.h+rnd()*t.h*.22,t.z,3]};
   if(this.moverKey!=='city'){this.moverKey='city';this.movers=[];
    const TY=[['sedan',.3],['suv',.17],['taxi',.12],['van',.08],['truck',.09],['bus',.07],['moto',.13],['emg',.04]],PAL=[[220,45,60],[45,125,235],[238,240,240],[35,36,42],[235,200,50],[45,185,105],[150,152,162],[255,130,35],[150,70,220]];
+   const carCount=96;
    this.cars=[];for(let i=0;i<170;i++){let r=Math.random(),ty='sedan';for(const q of TY){if(r<q[1]){ty=q[0];break}r-=q[1]}
     const slow=ty==='bus'||ty==='truck';
-    this.cars.push({ax:Math.random()<.5,k:Math.floor(Math.random()*10),lane:Math.random()<.5?-1:1,s:Math.random(),v:(slow?.1:ty==='moto'?.3:.16)+Math.random()*.14,ty,col:ty==='taxi'?[250,205,40]:ty==='bus'?[40,160,200]:ty==='emg'?[240,240,245]:PAL[Math.floor(Math.random()*PAL.length)]})}}
+    const car={ax:Math.random()<.5,k:Math.floor(Math.random()*10),lane:Math.random()<.5?-1:1,s:Math.random(),v:(slow?.1:ty==='moto'?.3:.16)+Math.random()*.14,ty,col:ty==='taxi'?[250,205,40]:ty==='bus'?[40,160,200]:ty==='emg'?[240,240,245]:PAL[Math.floor(Math.random()*PAL.length)]};if(i<carCount)this.cars.push(car)}}
   return this.mix([[.61,bld],[.04,asph],[.04,elight],[.05,dash],[.05,zebra],[.04,water],[.05,park],[.02,beacon],[.03,lamp],[.07,gp]],rnd);
  },
  decorShip(rnd){
@@ -265,12 +286,19 @@ export const World={
   const cb=[],cr=U.rand(777);
   for(let i=-7;i<=7;i++)for(let j=-6;j<=6;j++){const x=i*.15,zq=j*.15;if(Z.some(z=>Math.abs(zq-(z+.02))<.17)||Math.abs(x)>1.05||Math.abs(zq)>.88||cr()<.25)continue;
    cb.push({k:0,x:x+(cr()-.5)*.03,z:zq+(cr()-.5)*.03,y0:0,y1:.02+Math.pow(cr(),2)*.1,w:.03+cr()*.025,d:.03+cr()*.025,ra:3})}
-  const pk=cb.length?this.cumPick(cb,rnd):null,blk=()=>pk?this.primPt(pk(),rnd):floor();
+  const stationPrims=[];
+  this.buildings.forEach(b=>{
+   const w=b.bw||.16,style=b.metroStyle||0;
+   stationPrims.push({k:0,x:b.cx,z:b.cz+.095,y0:.13,y1:.145,w:w*(style===1?.9:1.1),d:.026,ra:4});
+   stationPrims.push({k:0,x:b.cx,z:b.cz+.074,y0:.145,y1:.151,w:w*(style===2?.54:.8),d:.008,ra:3});
+   if(style===2)stationPrims.push({k:0,x:b.cx-w*.7,z:b.cz+.078,y0:.13,y1:.22,w:.009,d:.009,ra:7});
+  });
+  const pk=cb.length?this.cumPick(cb,rnd):null,spk=stationPrims.length?this.cumPick(stationPrims,rnd):null,blk=()=>pk?this.primPt(pk(),rnd):floor(),station=()=>spk?this.primPt(spk(),rnd):floor();
   const key='metro'+g;
   if(this.moverKey!==key){this.moverKey=key;this.movers=[];this.trains=[];
    Z.forEach((z,r)=>[[1,z-.028],[-1,z-.006]].forEach(([dr,zt])=>{for(let i=0;i<2;i++)this.trains.push({k:'row',dr,zt,s:Math.random(),v:.25+Math.random()*.15,n:4+Math.floor(Math.random()*3),col:this.LC[r%this.LC.length]})}));
    for(let i=0;i<3;i++)this.trains.push({k:'loop',s:i/3,v:.3,n:6,col:[235,240,245]})}
-  return this.mix([[.22,floor],[.14,rail],[.08,slp],[.05,lr],[.02,sig],[.4,blk]],rnd);
+  return this.mix([[.18,floor],[.12,rail],[.08,slp],[.05,lr],[.025,sig],[.06,station],[.37,blk]],rnd);
  },
  decorFactory(rnd){
   const B=this.buildings,g=Math.max(3,...B.map(b=>(b.p.slots.factory||{g:3}).g)),PI2=Math.PI*2;
@@ -350,9 +378,10 @@ export const World={
  build(mode){
   const prims=[],B=this.buildings;
   B.forEach(b=>this.projectPrims(mode,b,prims));
-  const N=CONFIG.points,projN=prims.length?Math.min(Math.floor(N*.5),B.length*4500):0;
+  const taskPrims=mode==='ship'?prims.filter(q=>q.ti>=0):prims;
+  const N=CONFIG.points,projN=taskPrims.length?Math.min(Math.floor(N*.5),B.length*4500):0;
   const rnd=U.rand(U.hash(mode+'|'+B.map(b=>b.id+':'+b.p.seed+':'+b.n).join(',')));
-  const pick=prims.length?this.cumPick(prims,rnd):null,dec=this.decor(mode,rnd);
+  const pick=taskPrims.length?this.cumPick(taskPrims,rnd):null,dec=this.decor(mode,rnd);
   const pos=new Float32Array(N*3),attr=new Uint8Array(N),pid=new Int16Array(N),tid=new Int16Array(N),bri=new Float32Array(N);
   for(let i=0,k=0;i<N;i++){
    let pt,id=-1,ti=-1;
