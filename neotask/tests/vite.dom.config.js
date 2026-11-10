@@ -10,7 +10,7 @@ export default {
   logLevel: 'warn',
   define: { 'process.env.NODE_ENV': '"production"' },
   build: {
-    outDir: '/tmp/nt-iife',
+    outDir: path.join(root, '.tmp', 'nt-iife'),
     emptyOutDir: true,
     minify: false,
     lib: { entry: path.join(root, 'src/main.jsx'), formats: ['iife'], name: 'NeoTaskApp', fileName: () => 'app.js' }

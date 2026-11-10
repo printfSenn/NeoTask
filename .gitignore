@@ -4,6 +4,7 @@ neotask/node_modules/
 # Build output
 neotask/dist/
 neotask/dist-single/
+neotask/.tmp/
 
 # Local tooling and logs
 .vscode/

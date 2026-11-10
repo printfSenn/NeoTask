@@ -5,7 +5,7 @@ import {JSDOM,VirtualConsole} from 'jsdom'
 
 const here=path.dirname(fileURLToPath(import.meta.url))
 const oldHtml=fs.readFileSync(process.env.PARITY_HTML||path.join(here,'reference/neotask.html'),'utf8')
-const bundle=fs.readFileSync(process.env.PARITY_BUNDLE||'/tmp/nt-iife/app.js','utf8')
+const bundle=fs.readFileSync(process.env.PARITY_BUNDLE||path.join(here,'..','.tmp','nt-iife','app.js'),'utf8')
 const wait=ms=>new Promise(r=>setTimeout(r,ms))
 
 const mulberry=seed=>{let a=seed>>>0;return()=>{a+=0x6D2B79F5;let t=a;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}}
