@@ -79,7 +79,7 @@ Object.assign(Viz,{rows:[],DAYS:40,LW:62,
 });
 
 export const Picker={down:[0,0],moved:false,
- nearest(x,y){let best='',score=1e9;World.buildings.forEach(b=>{const q=R.scr[b.index];if(!q)return;const dist=Math.hypot(q[0]-x,q[1]-y),reach=(14+b.h*40)*R.DPR;if(dist<reach){const s=dist-q[2]*10;if(s<score){score=s;best=b.p.id}}});return best},
+ nearest(x,y){if(World.mode==='globe'){let sat='',sd=1e9;for(const q of R.satScr){const d=Math.hypot(q.x-x,q.y-y);if(d<sd&&d<28*R.DPR){sd=d;sat=q.id}}if(sat)return sat}let best='',score=1e9;World.buildings.forEach(b=>{const q=R.scr[b.index];if(!q)return;const dist=Math.hypot(q[0]-x,q[1]-y),reach=(14+b.h*40)*R.DPR;if(dist<reach){const s=dist-q[2]*10;if(s<score){score=s;best=b.p.id}}});return best},
  init(c,tip){const off=[],on=(n,f,o)=>{c.addEventListener(n,f,o);off.push(()=>c.removeEventListener(n,f,o))};
   on('pointerdown',e=>{Cine.stop();this.down=[e.clientX,e.clientY];this.moved=false;State.dragging=true;State.lx=e.clientX;State.ly=e.clientY;c.setPointerCapture(e.pointerId)});
   on('pointerup',e=>{State.dragging=false;if(!this.moved){const r=c.getBoundingClientRect();API.select(this.nearest((e.clientX-r.left)*R.DPR,(e.clientY-r.top)*R.DPR))}});

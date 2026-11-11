@@ -38,7 +38,7 @@ function Boot(){
  const el=useRef(null),pre=useRef(null)
  useEffect(()=>{
   const n=Store.projects.length,
-   lines=['> mounting NeoTask engine','> scenes: city satellite ship factory airport metro','> loading '+n+' project'+(n===1?'':'s')+' from local store','> calibrating alert threshold '+State.threshold.toFixed(2),'> render core online']
+   lines=['> mounting NeoTask engine','> scenes: city satellite globe ship factory airport metro','> loading '+n+' project'+(n===1?'':'s')+' from local store','> calibrating alert threshold '+State.threshold.toFixed(2),'> render core online']
   let li=0,ci=0,out='',done=false,tm=0
   const finish=()=>{
    if(done)return

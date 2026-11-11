@@ -1,12 +1,13 @@
 export const CONFIG={
  points:50000,windowPitch:.02,rowPitch:.016,urgencyWindowDays:14,alertThreshold:.70,gridBase:3,
  limits:{importBytes:2*1024*1024,maxProjects:500,maxTasksPerProject:1000,maxTotalTasks:10000,maxNameLength:200,maxGroupLength:100,maxTaskTitleLength:300},
- scenes:['city','satellite','ship','factory','airport','metro'],
+ scenes:['city','satellite','globe','ship','factory','airport','metro'],
  layers:[['true','TRUE'],['progress','PROGRESS'],['urgency','URGENCY'],['load','OPEN LOAD'],['risk','RISK']],
  palette:[[44,100,76],[70,135,108],[170,245,205],[205,255,228],[0,255,102],[40,205,95],[34,165,180],[255,60,80]],
  sceneCfg:{
   city:{taskH:.13,hMin:.5,hMax:1.35,types:['slab','tower','setback','podium','crown','spire']},
   satellite:{taskH:.11,hMin:.35,hMax:1.05,types:['station','dish','array']},
+  globe:{taskH:.08,hMin:.12,hMax:.28,types:['region']},
   ship:{taskH:.075,hMin:.25,hMax:.8,types:['containers']},
   factory:{taskH:.1,hMin:.35,hMax:1.0,types:['hall','tank','silo']},
   airport:{taskH:.1,hMin:.3,hMax:1,types:['jet']},
@@ -25,6 +26,6 @@ export const U={
 };
 export function deep(v){return JSON.parse(JSON.stringify(v))}
 export const State={scene:'city',layer:'true',threshold:CONFIG.alertThreshold,selected:'',hover:'',auto:true,showTraffic:true,
- rotY:.65,rotX:.15,zoom:.95,vy:0,time:0,dragging:false,lx:0,ly:0,pulses:[],alerted:new Set(),alerts:0,flights:[],done:new Set(),fi:false,pm:'',cine:false,fw:0,fx:0,fy:0,fz:0,cd:0,ci:-1,fp:null,listeners:{select:[]}};
+ rotY:.65,rotX:.15,zoom:.95,vy:0,time:0,dragging:false,lx:0,ly:0,pulses:[],alerted:new Set(),alerts:0,flights:[],done:new Set(),fi:false,pm:'',cine:false,fw:0,fx:0,fy:0,fz:0,cd:0,ci:-1,fp:null,sceneFx:0,sceneFxFrom:0,sceneFxTo:0,sceneFxStart:0,sceneFxDuration:1.35,listeners:{select:[]}};
 export const UI={ready:false,log(){},refreshAll(){},card(){},list(){},stats(){},sync(){}}
 export const Viz={draw(){}}

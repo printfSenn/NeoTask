@@ -2,7 +2,7 @@ import{CONFIG,U,State}from'./core.js'
 import{Store,Data}from'./store.js'
 export const World={
  mode:'city',buildings:[],byId:new Map(),prims:[],pos:null,cur:null,from:null,delay:null,moving:false,t0:0,
- attr:null,pid:null,tid:null,bri:null,movers:[],moverKey:'',sites:[],S:2.5/9,
+ attr:null,pid:null,tid:null,bri:null,movers:[],moverKey:'',sites:[],S:2.5/9,globeR:.86,globeY:.2,
  idx(id){const b=this.byId.get(id);return b?b.index:-1},
  river(x,z){return Math.abs(x*.75+z*.66-.12+Math.sin(z*2.2)*.18)<.13},
  hullW(u){return(1-Math.pow(Math.abs(u),3))*.4},
@@ -32,6 +32,13 @@ export const World={
 
  layout(mode){
   const B=this.buildings,cfg=CONFIG.sceneCfg[mode],S=this.S,used=new Set();this.sites=[];
+  if(mode==='globe'){
+   B.forEach(b=>{
+    const r=U.rand((b.p.seed>>>0)^0x9e3779b9),lat=(r()-.5)*1.25,lon=(r()*2-1)*Math.PI,p=this.globePoint(lat,lon,this.globeR+.018);
+    b.glat=lat;b.glon=lon;b.cx=p[0];b.y0=p[1];b.cz=p[2];b.h=.025;b.w=.035;b.d=.035;b.bw=.055;b.bd=.055;b.top=b.y0+b.h;this.sites.push({x:b.cx,z:b.cz,y0:b.y0})
+   });
+   return
+  }
   B.forEach(b=>{
    const p=b.p,r=U.rand(p.seed>>>0),n=p.tasks.length;
    b.n=n;b.pid=b.index;b.h=n?U.cl(n*cfg.taskH,cfg.hMin,cfg.hMax):.12;
@@ -62,6 +69,13 @@ export const World={
    b.w=Math.max(.03,w);b.d=Math.max(.02,d);this.sites.push({x:b.cx,z:b.cz,y0:b.y0});
   });
  },
+ globePoint(lat,lon,r=this.globeR){const q=Math.cos(lat),a=lon;return[Math.cos(a)*q*r,this.globeY+Math.sin(lat)*r,Math.sin(a)*q*r]},
+ globeLand(lat,lon){
+  const centers=[[.72,-1.75,.5,.62],[.52,-1.15,.43,.55],[.16,-1.75,.28,.48],[-.08,-.95,.34,.44],[-.22,.05,.35,.52],[.12,1.35,.38,.5],[.58,2.15,.34,.48],[-.48,2.35,.28,.42]];
+  let best=0;for(const [cl,co,wl,wh] of centers){const dl=Math.abs(lat-cl)/wh,dx=Math.abs((((lon-co+Math.PI)%(Math.PI*2))+Math.PI)%(Math.PI*2)-Math.PI)/wl;best=Math.max(best,1-dl*dl-dx*dx)}
+  const n=Math.sin(lat*17.3+lon*4.7)*.08+Math.sin(lat*31-lon*9.1)*.045;return best+n>.08
+ },
+  globeOrbit(k,a){const phase=(k*1.9)%(Math.PI*2),r=this.globeR+.3+(k%5)*.16,inc=.28+(k%4)*.18,aa=a+phase,sa=Math.sin(aa)*r;return[Math.cos(aa)*r,this.globeY+sa*Math.sin(inc),sa*Math.cos(inc)]},
 
  projectPrims(mode,b,a){
   const x=b.cx,z=b.cz,y0=b.y0,n=b.n,o=b.order,id=b.pid,W0=b.w,D0=b.d;
@@ -161,10 +175,20 @@ export const World={
  decor(mode,rnd){
   if(mode==='ship')return this.decorShip(rnd);
   if(mode==='satellite')return this.decorSat(rnd);
+  if(mode==='globe')return this.decorGlobe(rnd);
   if(mode==='factory')return this.decorFactory(rnd);
   if(mode==='airport')return this.decorAirport(rnd);
   if(mode==='metro')return this.decorMetro(rnd);
   return this.decorCity(rnd);
+ },
+ decorGlobe(rnd){
+  const surface=()=>{const u=rnd()*2-1,lat=Math.asin(u),lon=(rnd()*2-1)*Math.PI,p=this.globePoint(lat,lon,this.globeR+(rnd()-.5)*.012),land=this.globeLand(lat,lon);let a=land?(lat<-.72||lat>.92?5:(rnd()<.16?3:2)):(rnd()<.16?1:0);return[p[0],p[1],p[2],a]};
+  const key='globe|'+this.buildings.map(b=>b.id+':'+b.p.seed+':'+(b.alert?1:0)).join(',');
+  if(this.moverKey!==key){
+   this.moverKey=key;this.movers=[];const r=U.rand(U.hash(key));
+   this.buildings.forEach((b,k)=>{const radius=this.globeR+.3+(k%5)*.16;this.movers.push({s:r(),len:Math.PI*2*radius,sp:(r()<.5?-1:1)*(.16+r()*.1),tr:10,col:b.alert?[255,80,105]:k%2?[80,170,255]:[0,255,190],orbit:k,kind:'globe-sat',projectId:b.id,f:s=>this.globeOrbit(k,s*Math.PI*2)})});
+  }
+  return surface;
  },
  decorCity(rnd){
   const S=this.S,occ=new Set(this.buildings.map(b=>b.ix+'|'+b.iz)),boxes=[],parks=[],tall=[],ext=1.3;
@@ -368,7 +392,23 @@ export const World={
  },
 
 
+ buildGlobe(){
+  const N=CONFIG.points,rnd=U.rand(U.hash('globe|'+this.buildings.map(b=>b.id+':'+b.p.seed+':'+b.n).join(','))),dec=this.decorGlobe(rnd),markers=[];
+  for(const b of this.buildings){
+   const tasks=b.order.length?b.order:[{_i:-1,done:false}],r=U.rand((b.p.seed>>>0)^0x51ed270b);
+   tasks.forEach((tk,k)=>{const lat=b.glat+(r()-.5)*.065,lon=b.glon+(r()-.5)*.11,p=this.globePoint(lat,lon,this.globeR+.025);markers.push({p,id:b.index,ti:tk._i})});
+  }
+  const pos=new Float32Array(N*3),attr=new Uint8Array(N),pid=new Int16Array(N),tid=new Int16Array(N),bri=new Float32Array(N),markerN=Math.min(N,markers.length*8);
+  for(let i=0,k=0;i<N;i++){
+   let pt,id=-1,ti=-1;
+   if(i<markerN){const m=markers[i%markers.length];pt=[m.p[0],m.p[1],m.p[2],4];id=m.id;ti=m.ti}
+   else pt=dec();
+   pos[k++]=pt[0]+(rnd()-.5)*.001;pos[k++]=pt[1]+(rnd()-.5)*.001;pos[k++]=pt[2]+(rnd()-.5)*.001;attr[i]=pt[3];pid[i]=id;tid[i]=ti;bri[i]=.65+rnd()*.35;
+  }
+  return{prims:markers,pos,attr,pid,tid,bri};
+ },
  build(mode){
+  if(mode==='globe')return this.buildGlobe();
   const prims=[],B=this.buildings;
   B.forEach(b=>this.projectPrims(mode,b,prims));
   const N=CONFIG.points,projN=prims.length?Math.min(Math.floor(N*.5),B.length*4500):0;
@@ -384,8 +424,10 @@ export const World={
   return{prims,pos,attr,pid,tid,bri};
  },
  rebuild(instant){
-  const mode=State.scene,P=Store.projects;this.mode=mode;
-  const pn=(mode==='city'||mode==='airport'||mode==='metro'||mode==='factory')?85000:50000;const old=this.cur,oN=old?old.length/3:0;CONFIG.points=pn;
+  const mode=State.scene,P=Store.projects,oldMode=this.mode;this.mode=mode;
+  if(instant){State.sceneFx=mode==='globe'?1:0;State.sceneFxFrom=State.sceneFx;State.sceneFxTo=State.sceneFx}
+  else if(oldMode!==mode){State.sceneFxFrom=oldMode==='globe'?1:0;State.sceneFxTo=mode==='globe'?1:0;State.sceneFx=State.sceneFxFrom;State.sceneFxStart=performance.now()}
+  const pn=mode==='globe'?65000:(mode==='city'||mode==='airport'||mode==='metro'||mode==='factory')?85000:50000;const old=this.cur,oN=old?old.length/3:0;CONFIG.points=pn;
   this.buildings=P.map((p,i)=>({p,id:p.id,index:i,name:p.name,group:p.group,cx:0,cz:0,y0:0,h:.12,n:0}));
   this.byId=new Map(this.buildings.map(b=>[b.id,b]));
   if(State.selected&&!this.byId.has(State.selected))State.selected='';
@@ -396,6 +438,7 @@ export const World={
   else{const N=CONFIG.points,fr=new Float32Array(N*3);for(let i=0;i<N;i++){const j=(i<oN?i:i%oN)*3;fr[i*3]=old[j];fr[i*3+1]=old[j+1];fr[i*3+2]=old[j+2]}this.from=fr;this.cur=new Float32Array(fr);this.delay=new Float32Array(CONFIG.points);for(let i=0;i<CONFIG.points;i++)this.delay[i]=Math.random()*.5;this.t0=performance.now();this.moving=true}
  },
  stepMorph(now){
+  if(State.sceneFx!==State.sceneFxTo){const k=U.cl((now-State.sceneFxStart)/(State.sceneFxDuration*1000),0,1),e=k*k*(3-2*k);State.sceneFx=State.sceneFxFrom+(State.sceneFxTo-State.sceneFxFrom)*e}
   if(!this.moving)return;const t=(now-this.t0)/1000,N=CONFIG.points,cur=this.cur,from=this.from,to=this.pos;let done=true;
   for(let i=0,p=0;i<N;i++,p+=3){const k=U.cl((t-this.delay[i])/1.2,0,1);if(k<1)done=false;const e=k*k*(3-2*k),s=Math.sin(k*3.14)*.22;
    cur[p]=from[p]+(to[p]-from[p])*e+s*(Math.random()-.5);cur[p+1]=from[p+1]+(to[p+1]-from[p+1])*e+s*Math.random()*.6;cur[p+2]=from[p+2]+(to[p+2]-from[p+2])*e+s*(Math.random()-.5)}
