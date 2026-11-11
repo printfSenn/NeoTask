@@ -6,6 +6,7 @@ import{World}from'../engine/world.js'
 import{R}from'../engine/renderer.js'
 import{API}from'../engine/api.js'
 import{Cine}from'../engine/runtime.js'
+import{notify}from'./status.js'
 
 export const t=L
 
@@ -17,7 +18,7 @@ export const useTick=k=>useSyncExternalStore(subscribe,()=>cur[k])
 export const useBridge=(...keys)=>{keys.forEach(useTick)}
 
 export const logs={items:[],n:0}
-export const pushLog=(msg,cls,id)=>{logs.n++;logs.items=[...logs.items,{k:logs.n,ts:new Date().toTimeString().slice(0,8),msg:String(msg),cls:cls||'',id}].slice(-80);bump('log')}
+export const pushLog=(msg,cls,id)=>{logs.n++;logs.items=[...logs.items,{k:logs.n,ts:new Date().toTimeString().slice(0,8),msg:String(msg),cls:cls||'',id}].slice(-80);bump('log');if(logs.n>1||cls)notify(msg,cls==='c'?'error':cls==='w'?'warning':'success')}
 
 export const Search={value:'',focus(){}}
 export const setSearch=v=>{Search.value=v;bump('list')}

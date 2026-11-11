@@ -4,6 +4,7 @@ import{Store,Data}from'./store.js'
 import{World}from'./world.js'
 import{R}from'./renderer.js'
 import{openDialog}from'../ui/dialog.js'
+import{clearImportError,setBusy,setImportError}from'../ui/status.js'
 
 const input=options=>openDialog({mode:'input',...options})
 const confirmAction=options=>openDialog({mode:'confirm',...options})
@@ -45,10 +46,16 @@ export const API={world:World,state:State,config:CONFIG,store:Store,
   this.download('neotask-tasks-'+Store.fmt(new Date())+'.csv',rows.join('\n'),'text/csv');UI.log('export csv · '+(rows.length-1)+L(' baris'))},
  download(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)},
  snap(){R.cv.toBlob(b=>this.download('neotask-map-'+Date.now()+'.png',b,'image/png'));UI.log('snapshot png')},
- importTooLarge(){UI.log('import gagal · file terlalu besar','c');return false},
- async importJSON(txt){if(String(txt||'').length>CONFIG.limits.importBytes)return this.importTooLarge();let n;try{n=Store.norm(JSON.parse(txt))}catch(e){n=null}if(!n){UI.log(L('import gagal · JSON tidak valid atau melebihi batas'),'c');return false}
-  if(Store.projects.length&&!await confirmAction({command:'dataset import --replace',label:L('Ganti semua proyek dengan isi import?'),details:'This replaces the current local dataset.',confirmLabel:'ENTER / REPLACE'}))return false;
-  const before=Store.capture();Store.projects=n;Store.ensureSlots();Store.addUndo(before);World.rebuild(false);UI.refreshAll();Store.save();UI.log('import '+n.length+L(' proyek'));return true},
+ importTooLarge(){setImportError('The selected JSON file is too large.','maximum size: '+Math.round(CONFIG.limits.importBytes/1024/1024)+' MB');UI.log('import gagal · file terlalu besar','c');return false},
+ async importJSON(txt){
+  setBusy(true,'IMPORT JSON');clearImportError()
+  try{
+   if(String(txt||'').length>CONFIG.limits.importBytes)return this.importTooLarge();let n;try{n=Store.norm(JSON.parse(txt))}catch(e){n=null}
+   if(!n){setImportError(L('import gagal · JSON tidak valid atau melebihi batas'),'expected a NeoTask export with a valid projects array.');UI.log(L('import gagal · JSON tidak valid atau melebihi batas'),'c');return false}
+   if(Store.projects.length&&!await confirmAction({command:'dataset import --replace',label:L('Ganti semua proyek dengan isi import?'),details:'This replaces the current local dataset.',confirmLabel:'ENTER / REPLACE'}))return false;
+   const before=Store.capture();Store.projects=n;Store.ensureSlots();Store.addUndo(before);World.rebuild(false);UI.refreshAll();Store.save();UI.log('import '+n.length+L(' proyek'));return true
+  }finally{setBusy(false)}
+ },
  getSnapshot(){return{projects:deep(Store.projects),scene:State.scene,layer:State.layer,threshold:State.threshold}},
  setData(p){const n=Store.norm(p);if(!n)return false;Store.projects=n;Store.ensureSlots();World.rebuild(true);UI.refreshAll();Store.save();return true},
  selectNext(dir){const a=World.buildings;if(!a.length)return;let i=Math.max(0,a.findIndex(b=>b.p.id===State.selected));i=(i+(dir>0?1:-1)+a.length)%a.length;this.select(a[i].p.id)}

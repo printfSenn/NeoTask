@@ -8,6 +8,9 @@ import Header from'./ui/Header.jsx'
 import Stage from'./ui/Stage.jsx'
 import Sidebar from'./ui/Sidebar.jsx'
 import TerminalDialog from'./ui/TerminalDialog.jsx'
+import StatusOverlay from'./ui/StatusOverlay.jsx'
+import{NotFound}from'./ui/SystemPage.jsx'
+import{setBootReady}from'./ui/status.js'
 
 function useHotkeys(){
  useEffect(()=>{
@@ -40,6 +43,7 @@ function Boot(){
   const finish=()=>{
    if(done)return
    done=true
+   setBootReady()
    document.removeEventListener('keydown',kd,true)
    el.current.classList.add('off')
    tm=setTimeout(()=>{el.current.style.display='none'},700)
@@ -65,9 +69,12 @@ export default function App(){
  useTick('lang')
  useEffect(()=>{document.documentElement.lang=I18.cur})
  useHotkeys()
+ const path=window.location.pathname.replace(/\/+$/,'')||'/'
+ if(path!=='/'&&path!=='/index.html')return <NotFound/>
  return(<>
   <div id="app"><Header/><main><Stage/><Sidebar/></main></div>
   <TerminalDialog/>
+  <StatusOverlay/>
   <Boot/>
  </>)
 }
